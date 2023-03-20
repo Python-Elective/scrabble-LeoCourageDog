@@ -53,9 +53,13 @@ def get_frequency_dict(sequence):
 # (end of helper code)
 # -----------------------------------
 
+
+
 #
 # Problem #1: Scoring a word
 #
+
+
 def get_word_score(word, n):
     """
     Returns the score for a word. Assumes the word is a valid word.
@@ -71,8 +75,31 @@ def get_word_score(word, n):
     n: integer (HAND_SIZE; i.e., hand size required for additional points)
     returns: int >= 0
     """
-    # TO DO ... <-- Remove this comment when you code this function
 
+    if len(word) == 0:
+        return 0
+
+    # check pre-conditions
+    assert type(word) == str,       "type mismatch in function get_word_score()"
+    assert word.islower() == True,  "must be lowercase in get_word_score()"
+    assert type(n) == int,          "type mismatch in function get_word_score()"
+    assert n > 0,                   "hand length must not be zero in get_wrod_score()"
+
+    score = 0
+
+    for letter in word:
+        score += SCRABBLE_LETTER_VALUES[letter]
+    
+    score = score * len(word)
+    if len(word) == n:
+        score += 50
+        return score
+    else:
+        return score
+    
+    # check post conditions
+    assert score >= 0,              "score must be positive in get_word_score()"
+    
 
 #
 # Problem #2: Make sure you understand how this function works and what it does!
@@ -145,9 +172,31 @@ def update_hand(hand, word):
     hand: dictionary (string -> int)    
     returns: dictionary (string -> int)
     """
-    # TO DO ... <-- Remove this comment when you code this function
+    """
+    make a copy of hand
+    for letter in word
+        decrease the letter count by one
+        hand_copy[letter] -= 1
+    if no letter left:
+        two ways:
+        set letter value to zero or
+        del the key
+    return hand_copy
+    """
 
+    assert type(hand) == dict,          "Type Error"
+    assert len(hand) > 0,               "Hand length must be more than zero"
+    assert type(word),                  "Type Error"
+    assert len(word) > 0,               "Word length must be more than zero"
 
+    hand_copy = hand.copy()
+    for letter in word:
+        hand_copy[letter] -= 1
+        if hand_copy[letter] == 0:
+            del hand_copy[letter]
+    return hand_copy
+    
+    
 #
 # Problem #3: Test word validity
 #
@@ -162,9 +211,41 @@ def is_valid_word(word, hand, word_list):
     hand: dictionary (string -> int)
     word_list: list of lowercase strings
     """
-    # TO DO ... <-- Remove this comment when you code this function
+    """
+    Pseudocode
+    make a .copy() of the hand
+    
+    for every letter in the word
+        if letter is not in hand_copy
+            return False
+        otherwise
+            check if we have enough of that letter in the hand
+            if hand_copy[letter] > 0    #ok enough og that letter
+                subtract 1 from letter count
+                hand_copy[letter] -= 1
+            otherwise                   #not enough of that letter
+                return False
+    
+    if word is not in word list         #check against all 80000+ words
+        return False
+    """
+    
+    hand_copy = hand.copy()
+    
+    for letter in word:
+        if letter not in hand_copy:
+            return False
+        elif hand_copy[letter] > 0:
+            hand_copy[letter] -= 1
+        else:
+            return False
 
+    if word not in word_list:
+        return False
 
+    return True
+
+    
 #
 # Problem #4: Playing a hand
 #
@@ -177,6 +258,10 @@ def calculate_hand_len(hand):
     returns: integer
     """
     # TO DO... <-- Remove this comment when you code this function
+    assert type(hand) == dict,          "Type Error"
+    return sum(hand.values())
+
+
 
 
 def play_hand(hand, word_list, n):
@@ -185,7 +270,7 @@ def play_hand(hand, word_list, n):
 
     * The hand is displayed.
     * The user may input a word or a single period (the string ".") 
-      to indicate they're done playing
+      to indicate they're done playing  
     * Invalid words are rejected, and a message is displayed asking
       the user to choose another word until they enter a valid word or "."
     * When a valid word is entered, it uses up letters from the hand.
@@ -227,6 +312,38 @@ def play_hand(hand, word_list, n):
     # Update the hand
 
     # Game is over (user entered a '.' or ran out of letters), so tell user the total score
+    
+    total_score = 0
+    while True:
+        #display hand
+        print("Current Hand: ", end='')
+        display_hand(hand)
+
+        #ask user for input
+        user_word = input('Enter word, or a "." to indicate that you are finished: ')
+
+        #check input
+        if user_word == '.':
+            print('Goodbye! Total score: ' + str(total_score) + ' points.')
+            break
+        else:
+            #check for valid word
+            if not is_valid_word(user_word, hand, word_list):
+                print('Invalid word, please try again.')
+                print()
+            else:
+                score = get_word_score(user_word, n)
+                total_score += score
+                print('"' + user_word + '"' + ' earned ' + str(score) + " points. Total: " + str(total_score) + ' points')
+                
+                #update hand
+                hand = update_hand(hand, user_word)
+
+                #check if the letters run out
+                if calculate_hand_len(hand) == 0:
+                    print('Run out of letters. Total score: ' + str(total_score) + ' points')
+                    break
+
 
 
 #
@@ -247,8 +364,29 @@ def play_game(word_list):
     """
     # TO DO ... <-- Remove this comment when you code this function
     # <-- Remove this line when you code the function
-    print("play_game not yet implemented.")
 
+    hand = {}
+    hand2 = {}
+
+    while True:
+        n = 7
+
+        user_input = input('Enter n to deal a new hand, r to replay the last hand, or e to end game: ')
+        if user_input == "e":
+            print('Good bye!')
+            break
+        elif user_input == "n":
+            hand = deal_hand(n)
+            play_hand(hand, word_list, n)
+            hand2 = hand
+        elif user_input == "r":
+            if not hand2:
+                print('You have not played a hand yet. Please play a new hand first!')
+                continue
+            else:
+                play_hand(hand2, word_list, n)
+        else:
+            print("Invalid command.")
 
 #
 # Build data structures used for entire session and play game
